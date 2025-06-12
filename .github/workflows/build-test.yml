@@ -14,6 +14,10 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest, arch-latest]
         python-version: ["3.12", "3.13"]
     
+    defaults:
+      run:
+        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -61,7 +65,8 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         # Test that the entry point is available in PATH after installation  
-        where mcp-crawl4ai-rag 2>$null || echo "Entry point not found in PATH"
+        Get-Command mcp-crawl4ai-rag -ErrorAction SilentlyContinue | Out-Null
+        if (-not $?) { Write-Host "Entry point not found in PATH" }
         # Note: Skip execution test on Windows as it may have different requirements
 
     - name: Upload build artifacts
