@@ -301,6 +301,45 @@ Add this server to your MCP configuration for Claude Desktop, Windsurf, or any o
 }
 ```
 
+### uvx Configuration
+
+You can also run the MCP server using `uvx` for easy installation and execution:
+
+```bash
+# Install and run directly with uvx
+uvx --from git+https://github.com/rsp2k/mcp-crawl4ai-rag.git src/crawl4ai_mcp.py
+```
+
+For MCP client configuration with uvx:
+
+```json
+{
+  "mcpServers": {
+    "crawl4ai-rag": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/rsp2k/mcp-crawl4ai-rag.git", "src/crawl4ai_mcp.py"],
+      "env": {
+        "TRANSPORT": "stdio",
+        "OPENAI_API_KEY": "your_openai_api_key",
+        "SUPABASE_URL": "your_supabase_url",
+        "SUPABASE_SERVICE_KEY": "your_supabase_service_key",
+        "MODEL_CHOICE": "gpt-4.1-nano",
+        "USE_CONTEXTUAL_EMBEDDINGS": "false",
+        "USE_HYBRID_SEARCH": "true",
+        "USE_AGENTIC_RAG": "false",
+        "USE_RERANKING": "true"
+      }
+    }
+  }
+}
+```
+
+The uvx approach is particularly useful for:
+- **Quick testing**: No need to clone the repository or manage dependencies
+- **CI/CD pipelines**: Easy integration in automated workflows  
+- **Distribution**: Share the MCP server without requiring users to install dependencies manually
+- **Version isolation**: Each execution gets a fresh environment
+
 ## Building Your Own Server
 
 This implementation provides a foundation for building more complex MCP servers with web crawling capabilities. To build your own:
