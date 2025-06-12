@@ -16,9 +16,9 @@ def test_package_builds():
     """Test that the package can be built using standard Python packaging tools."""
     print("🔧 Testing package build...")
     
-    # Test building with pip
+    # Test building with uv
     result = subprocess.run([
-        sys.executable, "-m", "build", "--wheel", "--outdir", "dist/"
+        "uv", "run", "python", "-m", "build", "--wheel", "--outdir", "dist/"
     ], capture_output=True, text=True)
     
     if result.returncode == 0:
@@ -30,7 +30,7 @@ def test_package_builds():
 
 def test_main_function_importable():
     """Test that the main function can be imported from the module."""
-    print("📦 Testing main function import...")
+    print("🔍 Testing main function import...")
     
     try:
         # Add src to path for testing
@@ -66,9 +66,9 @@ def test_entry_point_after_install():
     # Create a temporary directory for installation
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
-            # Install the package in development mode
+            # Install the package in development mode using uv
             result = subprocess.run([
-                sys.executable, "-m", "pip", "install", "-e", ".", 
+                "uv", "pip", "install", "-e", ".", 
                 "--target", temp_dir
             ], capture_output=True, text=True, cwd=".")
             
@@ -98,7 +98,7 @@ def test_entry_point_after_install():
 
 def test_pyproject_toml_valid():
     """Test that pyproject.toml contains required fields."""
-    print("📋 Testing pyproject.toml validity...")
+    print("🔍 Testing pyproject.toml validity...")
     
     try:
         import tomllib
@@ -169,7 +169,7 @@ def main():
     print(f"\n📊 Test Results:")
     print(f"✅ Passed: {passed}")
     print(f"❌ Failed: {failed}")
-    print(f"📋 Total:  {len(tests)}")
+    print(f"🔍 Total:  {len(tests)}")
     
     if failed == 0:
         print("\n🎉 All packaging tests passed!")
