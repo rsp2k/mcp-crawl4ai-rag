@@ -134,7 +134,7 @@ jobs:
 
     - name: Validate pyproject.toml
       run: |
-        uv run python -c "
+        python -c "
         import tomli
         with open('pyproject.toml', 'rb') as f:
             config = tomli.load(f)
@@ -152,7 +152,7 @@ jobs:
 
     - name: Check entry point format
       run: |
-        uv run python -c "
+        python -c "
         import tomli
         with open('pyproject.toml', 'rb') as f:
             config = tomli.load(f)
