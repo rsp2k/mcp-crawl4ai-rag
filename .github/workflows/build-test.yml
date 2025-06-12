@@ -130,7 +130,7 @@ jobs:
 
     - name: Install validation tools
       run: |
-        uv pip install tomli validate-pyproject
+        uv pip install --system tomli validate-pyproject
 
     - name: Validate pyproject.toml
       run: |
