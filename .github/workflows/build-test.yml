@@ -85,13 +85,16 @@ jobs:
 
     - name: Install uv
       uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
     - name: Test minimal import
       run: |
         # Test that the main module can be imported without installing dependencies
         # This verifies basic Python syntax and import structure
         export PYTHONPATH="${PYTHONPATH}:./src"
-        python -c "
+        uv run python -c "
         try:
             import crawl4ai_mcp
             print('✅ Module imports successfully')
@@ -119,13 +122,19 @@ jobs:
       with:
         python-version: "3.12"
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
     - name: Install validation tools
       run: |
-        pip install tomli validate-pyproject
+        uv pip install tomli validate-pyproject
 
     - name: Validate pyproject.toml
       run: |
-        python -c "
+        uv run python -c "
         import tomli
         with open('pyproject.toml', 'rb') as f:
             config = tomli.load(f)
@@ -143,7 +152,7 @@ jobs:
 
     - name: Check entry point format
       run: |
-        python -c "
+        uv run python -c "
         import tomli
         with open('pyproject.toml', 'rb') as f:
             config = tomli.load(f)
