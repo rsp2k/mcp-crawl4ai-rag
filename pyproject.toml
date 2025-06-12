@@ -12,3 +12,6 @@ dependencies = [
     "dotenv==0.9.9",
     "sentence-transformers>=4.1.0",
 ]
+
+[project.scripts]
+mcp-crawl4ai-rag = "crawl4ai_mcp:main"
