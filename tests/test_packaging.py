@@ -10,6 +10,7 @@ import sys
 import importlib.util
 import tempfile
 import os
+import platform
 from pathlib import Path
 
 def test_package_builds():
@@ -63,38 +64,67 @@ def test_entry_point_after_install():
     """Test that the entry point works after installation."""
     print("🚀 Testing entry point installation...")
     
-    # Create a temporary directory for installation
-    with tempfile.TemporaryDirectory() as temp_dir:
+    if platform.system() == "Windows":
+        # On Windows, use a simpler approach to avoid file locking issues
         try:
             # Install the package in development mode using uv
             result = subprocess.run([
-                "uv", "pip", "install", "-e", ".", 
-                "--target", temp_dir
+                "uv", "pip", "install", "-e", "."
             ], capture_output=True, text=True, cwd=".")
             
             if result.returncode != 0:
                 print(f"❌ Failed to install package: {result.stderr}")
                 return False
             
-            # Add temp directory to Python path
-            sys.path.insert(0, temp_dir)
+            # Test that the package can be imported after installation
+            result = subprocess.run([
+                "uv", "run", "python", "-c", 
+                "try:\n    import crawl4ai_mcp\n    print('Package import successful')\nexcept Exception as e:\n    print(f'Import failed: {e}')\n    exit(1)"
+            ], capture_output=True, text=True, cwd=".")
             
-            try:
-                # Try to import the installed package
-                import crawl4ai_mcp
+            if result.returncode == 0:
                 print("✅ Package installs and imports successfully")
                 return True
-            except ImportError as e:
-                print(f"❌ Failed to import after installation: {e}")
+            else:
+                print(f"❌ Failed to import after installation: {result.stderr}")
                 return False
-            finally:
-                # Clean up sys.path
-                if temp_dir in sys.path:
-                    sys.path.remove(temp_dir)
-                    
+                
         except Exception as e:
             print(f"❌ Installation test failed: {e}")
             return False
+    else:
+        # Unix systems: use the original approach with temporary directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            try:
+                # Install the package in development mode using uv
+                result = subprocess.run([
+                    "uv", "pip", "install", "-e", ".", 
+                    "--target", temp_dir
+                ], capture_output=True, text=True, cwd=".")
+                
+                if result.returncode != 0:
+                    print(f"❌ Failed to install package: {result.stderr}")
+                    return False
+                
+                # Add temp directory to Python path
+                sys.path.insert(0, temp_dir)
+                
+                try:
+                    # Try to import the installed package
+                    import crawl4ai_mcp
+                    print("✅ Package installs and imports successfully")
+                    return True
+                except ImportError as e:
+                    print(f"❌ Failed to import after installation: {e}")
+                    return False
+                finally:
+                    # Clean up sys.path
+                    if temp_dir in sys.path:
+                        sys.path.remove(temp_dir)
+                        
+            except Exception as e:
+                print(f"❌ Installation test failed: {e}")
+                return False
 
 def test_pyproject_toml_valid():
     """Test that pyproject.toml contains required fields."""
