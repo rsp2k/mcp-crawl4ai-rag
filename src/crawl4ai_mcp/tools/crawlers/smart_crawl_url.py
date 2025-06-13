@@ -20,11 +20,15 @@ from ...embeddings import extract_source_summary
 from ...storage.supabase import (
     update_source_info,
     add_documents_to_supabase,
-    extract_code_blocks,
     add_code_examples_to_supabase,
 )
 
-from .utils import smart_chunk_markdown, extract_section_info, process_code_example
+from .utils import (
+    smart_chunk_markdown,
+    extract_section_info,
+    process_code_example,
+    extract_code_blocks,
+)
 
 
 def is_sitemap(url: str) -> bool:

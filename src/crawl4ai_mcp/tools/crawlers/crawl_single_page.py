@@ -15,7 +15,6 @@ from ...storage.supabase import (
     add_code_examples_to_supabase,
     update_source_info,
     add_documents_to_supabase,
-    extract_code_blocks,
 )
 
 from ..crawlers.utils import (
@@ -23,6 +22,8 @@ from ..crawlers.utils import (
     extract_section_info,
     process_code_example,
 )
+
+from .utils import extract_code_blocks
 
 
 @mcp.tool()
