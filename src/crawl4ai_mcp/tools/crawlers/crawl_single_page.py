@@ -8,9 +8,20 @@ from mcp.server.fastmcp import Context
 
 from crawl4ai import CrawlerRunConfig, CacheMode
 
-from ..crawl4ai_mcp import smart_chunk_markdown, extract_section_info, process_code_example, mcp
-from ..utils import (
-    extract_source_summary, update_source_info, add_documents_to_supabase, extract_code_blocks, add_code_examples_to_supabase
+
+from ...crawl4ai_mcp import mcp
+from ...embeddings import extract_source_summary
+from ...storage.supabase import (
+    add_code_examples_to_supabase,
+    update_source_info,
+    add_documents_to_supabase,
+    extract_code_blocks,
+)
+
+from ..crawlers.utils import (
+    smart_chunk_markdown,
+    extract_section_info,
+    process_code_example,
 )
 
 
@@ -54,6 +65,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
             contents = []
             metadatas = []
             total_word_count = 0
+            code_blocks = []
 
             for i, chunk in enumerate(chunks):
                 urls.append(url)
@@ -75,11 +87,22 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
             url_to_full_document = {url: result.markdown}
 
             # Update source information FIRST (before inserting documents)
-            source_summary = extract_source_summary(source_id, result.markdown[:5000])  # Use first 5000 chars for summary
-            update_source_info(supabase_client, source_id, source_summary, total_word_count)
+            source_summary = extract_source_summary(
+                source_id, result.markdown[:5000]
+            )  # Use first 5000 chars for summary
+            update_source_info(
+                supabase_client, source_id, source_summary, total_word_count
+            )
 
             # Add documentation chunks to Supabase (AFTER source exists)
-            add_documents_to_supabase(supabase_client, urls, chunk_numbers, contents, metadatas, url_to_full_document)
+            add_documents_to_supabase(
+                supabase_client,
+                urls,
+                chunk_numbers,
+                contents,
+                metadatas,
+                url_to_full_document,
+            )
 
             # Extract and process code examples only if enabled
             extract_code_examples = os.getenv("USE_AGENTIC_RAG", "false") == "true"
@@ -93,19 +116,29 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                     code_metadatas = []
 
                     # Process code examples in parallel
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                    with concurrent.futures.ThreadPoolExecutor(
+                        max_workers=10
+                    ) as executor:
                         # Prepare arguments for parallel processing
-                        summary_args = [(block['code'], block['context_before'], block['context_after'])
-                                        for block in code_blocks]
+                        summary_args = [
+                            (
+                                block["code"],
+                                block["context_before"],
+                                block["context_after"],
+                            )
+                            for block in code_blocks
+                        ]
 
                         # Generate summaries in parallel
-                        summaries = list(executor.map(process_code_example, summary_args))
+                        summaries = list(
+                            executor.map(process_code_example, summary_args)
+                        )
 
                     # Prepare code example data
                     for i, (block, summary) in enumerate(zip(code_blocks, summaries)):
                         code_urls.append(url)
                         code_chunk_numbers.append(i)
-                        code_examples.append(block['code'])
+                        code_examples.append(block["code"])
                         code_summaries.append(summary)
 
                         # Create metadata for code example
@@ -113,8 +146,8 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                             "chunk_index": i,
                             "url": url,
                             "source": source_id,
-                            "char_count": len(block['code']),
-                            "word_count": len(block['code'].split())
+                            "char_count": len(block["code"]),
+                            "word_count": len(block["code"].split()),
                         }
                         code_metadatas.append(code_meta)
 
@@ -125,31 +158,28 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                         code_chunk_numbers,
                         code_examples,
                         code_summaries,
-                        code_metadatas
+                        code_metadatas,
                     )
 
-            return json.dumps({
-                "success": True,
-                "url": url,
-                "chunks_stored": len(chunks),
-                "code_examples_stored": len(code_blocks) if code_blocks else 0,
-                "content_length": len(result.markdown),
-                "total_word_count": total_word_count,
-                "source_id": source_id,
-                "links_count": {
-                    "internal": len(result.links.get("internal", [])),
-                    "external": len(result.links.get("external", []))
-                }
-            }, indent=2)
+            return json.dumps(
+                {
+                    "success": True,
+                    "url": url,
+                    "chunks_stored": len(chunks),
+                    "code_examples_stored": len(code_blocks) if code_blocks else 0,
+                    "content_length": len(result.markdown),
+                    "total_word_count": total_word_count,
+                    "source_id": source_id,
+                    "links_count": {
+                        "internal": len(result.links.get("internal", [])),
+                        "external": len(result.links.get("external", [])),
+                    },
+                },
+                indent=2,
+            )
         else:
-            return json.dumps({
-                "success": False,
-                "url": url,
-                "error": result.error_message
-            }, indent=2)
+            return json.dumps(
+                {"success": False, "url": url, "error": result.error_message}, indent=2
+            )
     except Exception as e:
-        return json.dumps({
-            "success": False,
-            "url": url,
-            "error": str(e)
-        }, indent=2)
+        return json.dumps({"success": False, "url": url, "error": str(e)}, indent=2)
