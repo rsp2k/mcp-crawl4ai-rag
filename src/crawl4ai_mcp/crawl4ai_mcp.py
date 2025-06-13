@@ -101,7 +101,7 @@ mcp = FastMCP(
 )
 
 
-async def main():
+async def arun_server():
     transport = os.getenv("TRANSPORT", "sse")
     if transport == "sse":
         # Run the MCP server with sse transport
@@ -111,5 +111,9 @@ async def main():
         await mcp.run_stdio_async()
 
 
+def main():
+    asyncio.run(arun_server())
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
