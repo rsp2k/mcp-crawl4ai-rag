@@ -3,13 +3,12 @@ Utility functions for the Crawl4AI MCP server.
 """
 import os
 import concurrent.futures
-from typing import List, Dict, Any, Optional, Tuple
-import json
-from supabase import create_client, Client
-from urllib.parse import urlparse
-import openai
-import re
 import time
+from typing import List, Dict, Any, Optional, Tuple
+
+from urllib.parse import urlparse
+from supabase import create_client, Client
+import openai
 
 # Load OpenAI API key for embeddings
 openai.api_key = os.getenv("OPENAI_API_KEY")
